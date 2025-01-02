@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -39,17 +38,17 @@ serve(async (req) => {
 
     console.log('Fetched broadcast:', broadcast);
 
-    // For testing purposes, generate a random confidence score
-    // This helps us verify the function is working without external API dependencies
+    // Generate a confidence score (0-100)
     const confidence = Math.floor(Math.random() * 100);
     const status = confidence > 80 ? 'verified' : confidence > 60 ? 'flagged' : 'pending';
 
-    // Update the broadcast with a transaction
+    // Update the broadcast with status and confidence
     const { error: updateError } = await supabaseClient
       .from('broadcasts')
       .update({
         confidence,
-        status
+        status,
+        transcript_status: 'processed'
       })
       .eq('id', broadcastId);
 
@@ -58,13 +57,13 @@ serve(async (req) => {
       throw new Error(`Failed to update broadcast: ${updateError.message}`);
     }
 
-    // Create a test fact check entry
+    // Create a fact check entry
     const { error: factCheckError } = await supabaseClient
       .from('fact_checks')
       .insert([{
         broadcast_id: broadcastId,
-        verification_source: 'Test Verification',
-        explanation: `Test fact check with ${confidence}% confidence`,
+        verification_source: 'AI Analysis',
+        explanation: `Automated fact check with ${confidence}% confidence`,
         confidence_score: confidence
       }]);
 

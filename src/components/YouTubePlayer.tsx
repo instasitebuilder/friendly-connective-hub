@@ -66,6 +66,7 @@ const YouTubePlayer = ({ videoUrl }: { videoUrl: string }) => {
         let errorMessage = "Failed to fetch transcript";
         
         try {
+          // Parse error message from response
           if (typeof error.message === 'string') {
             const errorBody = JSON.parse(error.message);
             if (errorBody?.error) {
@@ -86,14 +87,13 @@ const YouTubePlayer = ({ videoUrl }: { videoUrl: string }) => {
       
       if (!data || !Array.isArray(data) || data.length === 0) {
         console.log('No transcript data received:', data);
-        throw new Error('No transcript data available for this video');
+        throw new Error('No transcript available for this video');
       }
 
-      // Transform the transcript data to match our interface
       const formattedTranscript: TranscriptItem[] = data.map((item: any) => ({
         text: item.text,
-        start: item.offset / 1000, // Convert milliseconds to seconds
-        duration: item.duration / 1000 // Convert milliseconds to seconds
+        start: item.offset / 1000,
+        duration: item.duration / 1000
       }));
       
       console.log('Transcript data processed:', formattedTranscript);
@@ -104,7 +104,7 @@ const YouTubePlayer = ({ videoUrl }: { videoUrl: string }) => {
         description: "The transcript has been successfully loaded.",
       });
 
-      // Process each transcript segment for fact-checking
+      // Process each transcript segment
       formattedTranscript.forEach(async (item) => {
         try {
           await processTranscriptSegment(item, videoUrl);
