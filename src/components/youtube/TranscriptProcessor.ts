@@ -18,6 +18,20 @@ export async function processTranscriptSegment(
     const claimScore = await analyzeClaimWithClaimBuster(item.text);
     console.log('ClaimBuster score:', claimScore);
 
+    // Convert score to percentage and determine status
+    const confidencePercentage = Math.round(claimScore * 100);
+    let status: "verified" | "debunked" | "flagged" | "pending";
+    
+    if (confidencePercentage > 80) {
+      status = "verified";
+    } else if (confidencePercentage > 60) {
+      status = "flagged";
+    } else {
+      status = "debunked";
+    }
+
+    console.log('Inserting broadcast with status:', status, 'and confidence:', confidencePercentage);
+
     // Insert into broadcasts table
     const { data: broadcast, error: broadcastError } = await supabase
       .from('broadcasts')
@@ -28,7 +42,8 @@ export async function processTranscriptSegment(
           video_url: videoUrl,
           timestamp: new Date(item.start * 1000).toISOString(),
           transcript_status: 'processed',
-          confidence: Math.round(claimScore * 100) // Convert 0-1 score to percentage
+          confidence: confidencePercentage,
+          status: status // Explicitly set status based on confidence
         }
       ])
       .select()
