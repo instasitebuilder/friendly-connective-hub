@@ -30,8 +30,8 @@ export async function processTranscriptSegment(
       status = "verified";
     } else if (confidencePercentage >= 60) {
       status = "flagged";
-    } else if (confidencePercentage < 60) {
-      status = "debunked";
+    } else {
+      status = "pending"; // Default to pending instead of debunked for low confidence
     }
 
     console.log('Inserting broadcast with status:', status, 'and confidence:', confidencePercentage);
