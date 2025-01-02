@@ -25,9 +25,11 @@ const YouTubePlayer = ({ videoUrl }: { videoUrl: string }) => {
     if (videoUrl) {
       const id = extractVideoId(videoUrl);
       if (id) {
+        console.log('Extracted video ID:', id);
         setVideoId(id);
         fetchTranscript(id);
       } else {
+        console.error('Invalid YouTube URL:', videoUrl);
         toast({
           title: "Invalid URL",
           description: "Please provide a valid YouTube URL",

@@ -11,10 +11,18 @@ interface TranscriptSegment {
 async function fetchYouTubeTranscript(videoId: string): Promise<TranscriptSegment[]> {
   try {
     console.log('Attempting to fetch YouTube transcript for:', videoId);
+    
+    // Validate video ID
+    if (!videoId || typeof videoId !== 'string') {
+      throw new Error('Invalid video ID provided');
+    }
+
     const transcript = await YoutubeTranscript.fetchTranscript(videoId, {
       lang: 'en',
       country: 'US'
     });
+
+    console.log('Raw transcript response:', transcript ? 'Received data' : 'No data');
 
     if (!transcript || transcript.length === 0) {
       console.error('No transcript found for video:', videoId);
@@ -29,14 +37,18 @@ async function fetchYouTubeTranscript(videoId: string): Promise<TranscriptSegmen
     }));
   } catch (error) {
     console.error('Error in fetchYouTubeTranscript:', error);
-    // Check if the error is specifically about captions being disabled
-    if (error.message?.includes('Captions are disabled for this video')) {
+    
+    // Check specific error conditions
+    if (error.message?.includes('Captions are disabled')) {
       throw new Error('Captions are disabled for this video');
     }
-    // Check if it's a private video
     if (error.message?.includes('private video')) {
       throw new Error('This video is private or unavailable');
     }
+    if (error.message?.includes('Invalid video ID')) {
+      throw new Error('Invalid YouTube video ID provided');
+    }
+    
     // Generic transcript not available error
     throw new Error('Transcript is not available for this video');
   }
@@ -67,6 +79,8 @@ serve(async (req) => {
 
     try {
       const transcript = await fetchYouTubeTranscript(videoId);
+      console.log('Successfully fetched transcript for video:', videoId);
+      
       return new Response(
         JSON.stringify(transcript),
         {
@@ -79,9 +93,7 @@ serve(async (req) => {
     } catch (error) {
       console.error('Transcript fetch error:', error);
       return new Response(
-        JSON.stringify({ 
-          error: error.message || 'Transcript is not available for this video'
-        }),
+        JSON.stringify({ error: error.message || 'Transcript is not available for this video' }),
         {
           status: 404,
           headers: {
