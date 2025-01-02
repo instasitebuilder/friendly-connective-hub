@@ -61,9 +61,9 @@ const YouTubePlayer = ({ videoUrl }: { videoUrl: string }) => {
       
       if (error) {
         console.error('Supabase function error:', error);
-        let errorMessage = "Failed to fetch transcript";
         
-        // Parse the error body if it exists
+        // Parse the error message from the response body
+        let errorMessage = "Failed to fetch transcript";
         try {
           const errorBody = JSON.parse(error.message);
           if (errorBody?.body) {
@@ -71,13 +71,19 @@ const YouTubePlayer = ({ videoUrl }: { videoUrl: string }) => {
             errorMessage = bodyError.error || errorMessage;
           }
         } catch (e) {
-          console.error('Error parsing error message:', e);
+          console.error('Error parsing error response:', e);
         }
         
-        throw new Error(errorMessage);
+        toast({
+          title: "Transcript Unavailable",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        return;
       }
       
-      if (!data || data.length === 0) {
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        console.log('No transcript data received:', data);
         throw new Error('No transcript data available for this video');
       }
 
@@ -88,7 +94,7 @@ const YouTubePlayer = ({ videoUrl }: { videoUrl: string }) => {
         duration: item.duration / 1000 // Convert milliseconds to seconds
       }));
       
-      console.log('Transcript data received:', formattedTranscript);
+      console.log('Transcript data processed:', formattedTranscript);
       setTranscript(formattedTranscript);
 
       toast({
@@ -105,14 +111,12 @@ const YouTubePlayer = ({ videoUrl }: { videoUrl: string }) => {
         }
       });
     } catch (error: any) {
-      console.error('Error fetching transcript:', error);
+      console.error('Error in transcript processing:', error);
       setTranscript([]);
-      
-      let errorMessage = error.message || "No transcript is available for this video";
       
       toast({
         title: "Transcript Unavailable",
-        description: errorMessage,
+        description: error.message || "No transcript is available for this video",
         variant: "destructive",
       });
     } finally {
