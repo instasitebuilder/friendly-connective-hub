@@ -21,13 +21,16 @@ export async function processTranscriptSegment(
 
     // Convert score to percentage and determine status
     const confidencePercentage = Math.round(claimScore * 100);
-    let status: BroadcastStatus;
     
-    if (confidencePercentage > 80) {
+    // Initialize with pending to ensure a valid status
+    let status: BroadcastStatus = "pending";
+    
+    // Set status based on confidence thresholds
+    if (confidencePercentage >= 80) {
       status = "verified";
-    } else if (confidencePercentage > 60) {
+    } else if (confidencePercentage >= 60) {
       status = "flagged";
-    } else {
+    } else if (confidencePercentage < 60) {
       status = "debunked";
     }
 

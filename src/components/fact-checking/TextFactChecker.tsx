@@ -31,12 +31,15 @@ export const TextFactChecker = () => {
       const confidencePercentage = Math.round(score * 100);
       setConfidence(confidencePercentage);
       
+      // Initialize with pending to ensure a valid status
       let status: BroadcastStatus = "pending";
+      
+      // Set status based on confidence thresholds
       if (confidencePercentage >= 80) {
         status = "verified";
       } else if (confidencePercentage >= 60) {
         status = "flagged";
-      } else {
+      } else if (confidencePercentage < 60) {
         status = "debunked";
       }
 
@@ -101,9 +104,9 @@ export const TextFactChecker = () => {
               <Badge
                 variant="outline"
                 className={
-                  confidence > 80
+                  confidence >= 80
                     ? "bg-green-500/10 text-green-500"
-                    : confidence > 60
+                    : confidence >= 60
                     ? "bg-yellow-500/10 text-yellow-500"
                     : "bg-red-500/10 text-red-500"
                 }
@@ -111,9 +114,9 @@ export const TextFactChecker = () => {
                 {confidence}% confidence
               </Badge>
               <span className="text-sm text-muted-foreground">
-                {confidence > 80
+                {confidence >= 80
                   ? "High likelihood of being a factual claim"
-                  : confidence > 60
+                  : confidence >= 60
                   ? "Moderate likelihood of being a factual claim"
                   : "Low likelihood of being a factual claim"}
               </span>
