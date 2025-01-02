@@ -10,6 +10,7 @@ serve(async (req) => {
 
   try {
     const { videoId } = await req.json()
+    console.log('Received request for video ID:', videoId)
 
     if (!videoId) {
       return new Response(
@@ -24,29 +25,15 @@ serve(async (req) => {
       )
     }
 
-    console.log('Attempting to fetch transcript for video:', videoId)
-    
     try {
-      const transcript = await YoutubeTranscript.fetchTranscript(videoId, {
-        lang: 'en',
-        country: 'US'
-      })
-
+      console.log('Fetching transcript for video:', videoId)
+      const transcript = await YoutubeTranscript.fetchTranscript(videoId)
+      
       if (!transcript || transcript.length === 0) {
-        console.log('No transcript data found for video:', videoId)
-        return new Response(
-          JSON.stringify({ error: 'No transcript data found for this video' }),
-          {
-            status: 404,
-            headers: {
-              ...corsHeaders,
-              'Content-Type': 'application/json'
-            }
-          }
-        )
+        console.log('No transcript found for video:', videoId)
+        throw new Error('No transcript available')
       }
 
-      console.log('Successfully fetched transcript for video:', videoId)
       return new Response(
         JSON.stringify(transcript),
         {
@@ -56,41 +43,12 @@ serve(async (req) => {
           }
         }
       )
-    } catch (transcriptError: any) {
-      console.error('Transcript fetch error:', transcriptError.message)
-      
-      // Handle specific error cases
-      if (transcriptError.message?.includes('Could not find automatic captions') ||
-          transcriptError.message?.includes('Transcript is disabled')) {
-        return new Response(
-          JSON.stringify({ error: 'Transcript is not available for this video' }),
-          {
-            status: 404,
-            headers: {
-              ...corsHeaders,
-              'Content-Type': 'application/json'
-            }
-          }
-        )
-      }
-      
-      if (transcriptError.message?.includes('Video is unavailable')) {
-        return new Response(
-          JSON.stringify({ error: 'Video is unavailable or does not exist' }),
-          {
-            status: 404,
-            headers: {
-              ...corsHeaders,
-              'Content-Type': 'application/json'
-            }
-          }
-        )
-      }
-
+    } catch (error) {
+      console.error('Error fetching transcript:', error)
       return new Response(
-        JSON.stringify({ error: 'Failed to fetch transcript' }),
+        JSON.stringify({ error: 'Transcript is not available for this video' }),
         {
-          status: 500,
+          status: 404,
           headers: {
             ...corsHeaders,
             'Content-Type': 'application/json'

@@ -1,5 +1,2 @@
-project_id = "cxsttajrlxchoebxshca"
 [functions.get-transcript]
-verify_jwt = false
-[functions.process-claim]
 verify_jwt = false
