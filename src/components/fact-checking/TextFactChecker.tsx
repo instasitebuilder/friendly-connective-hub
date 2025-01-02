@@ -29,13 +29,23 @@ export const TextFactChecker = () => {
       const confidencePercentage = Math.round(score * 100); // Round to nearest integer
       setConfidence(confidencePercentage);
       
-      // Save to database with rounded confidence score
-      const status = confidencePercentage > 80 ? "verified" : confidencePercentage > 60 ? "flagged" : "debunked";
+      // Save to database with rounded confidence score and proper status values
+      let status: "verified" | "debunked" | "flagged" | "pending";
+      if (confidencePercentage > 80) {
+        status = "verified";
+      } else if (confidencePercentage > 60) {
+        status = "flagged";
+      } else {
+        status = "debunked";
+      }
+
+      console.log('Inserting broadcast with status:', status); // Debug log
+
       const { error } = await supabase
         .from("broadcasts")
         .insert([{
           content: inputText,
-          confidence: confidencePercentage, // Using rounded integer value
+          confidence: confidencePercentage,
           status,
           source: "Manual Check"
         }]);
