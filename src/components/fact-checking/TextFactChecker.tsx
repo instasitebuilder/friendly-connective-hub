@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { analyzeClaimWithClaimBuster } from "@/utils/claimBusterApi";
+import { supabase } from "@/integrations/supabase/client";
 
 export const TextFactChecker = () => {
   const [inputText, setInputText] = useState("");
@@ -25,11 +26,25 @@ export const TextFactChecker = () => {
     setIsChecking(true);
     try {
       const score = await analyzeClaimWithClaimBuster(inputText);
-      setConfidence(score * 100); // Convert to percentage
+      const confidencePercentage = score * 100;
+      setConfidence(confidencePercentage);
+      
+      // Save to database
+      const status = confidencePercentage > 80 ? "verified" : confidencePercentage > 60 ? "flagged" : "debunked";
+      const { error } = await supabase
+        .from("broadcasts")
+        .insert([{
+          content: inputText,
+          confidence: confidencePercentage,
+          status,
+          source: "Manual Check"
+        }]);
+
+      if (error) throw error;
       
       toast({
         title: "Fact Check Complete",
-        description: `Analyzed with ${Math.round(score * 100)}% confidence`,
+        description: `Analyzed with ${Math.round(confidencePercentage)}% confidence`,
       });
     } catch (error) {
       console.error("Error checking fact:", error);
@@ -44,9 +59,11 @@ export const TextFactChecker = () => {
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full bg-white/50 backdrop-blur-sm dark:bg-gray-800/50">
       <CardHeader>
-        <CardTitle>Quick Fact Check</CardTitle>
+        <CardTitle className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
+          Quick Fact Check
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex gap-2">
@@ -54,11 +71,12 @@ export const TextFactChecker = () => {
             placeholder="Enter text to fact-check..."
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            className="flex-1"
+            className="flex-1 bg-white/50 dark:bg-gray-900/50"
           />
           <Button 
             onClick={handleCheck}
             disabled={isChecking}
+            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
           >
             Check
           </Button>
