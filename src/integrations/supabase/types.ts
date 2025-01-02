@@ -6,6 +6,9 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export type BroadcastStatus = "verified" | "debunked" | "flagged" | "pending";
+export type TranscriptStatus = "pending" | "processed" | "failed";
+
 export type Database = {
   public: {
     Tables: {
@@ -17,9 +20,9 @@ export type Database = {
           id: number
           source: string
           speaker: string | null
-          status: string | null
+          status: BroadcastStatus | null
           timestamp: string | null
-          transcript_status: string | null
+          transcript_status: TranscriptStatus | null
           updated_at: string | null
           video_title: string | null
           video_url: string | null
@@ -31,9 +34,9 @@ export type Database = {
           id?: number
           source: string
           speaker?: string | null
-          status?: string | null
+          status?: BroadcastStatus | null
           timestamp?: string | null
-          transcript_status?: string | null
+          transcript_status?: TranscriptStatus | null
           updated_at?: string | null
           video_title?: string | null
           video_url?: string | null
@@ -45,9 +48,9 @@ export type Database = {
           id?: number
           source?: string
           speaker?: string | null
-          status?: string | null
+          status?: BroadcastStatus | null
           timestamp?: string | null
-          transcript_status?: string | null
+          transcript_status?: TranscriptStatus | null
           updated_at?: string | null
           video_title?: string | null
           video_url?: string | null
@@ -89,7 +92,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "broadcasts"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
     }
@@ -107,8 +110,6 @@ export type Database = {
     }
   }
 }
-
-type PublicSchema = Database[Extract<keyof Database, "public">]
 
 export type Tables<
   PublicTableNameOrOptions extends
@@ -189,6 +190,8 @@ export type Enums<
   : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
     ? PublicSchema["Enums"][PublicEnumNameOrOptions]
     : never
+
+type PublicSchema = Database[Extract<keyof Database, "public">]
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends

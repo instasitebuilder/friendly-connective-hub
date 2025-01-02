@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { analyzeClaimWithClaimBuster } from "@/utils/claimBusterApi";
+import { BroadcastStatus, TranscriptStatus } from "@/integrations/supabase/types";
 
 interface TranscriptItem {
   text: string;
@@ -20,7 +21,7 @@ export async function processTranscriptSegment(
 
     // Convert score to percentage and determine status
     const confidencePercentage = Math.round(claimScore * 100);
-    let status: "verified" | "debunked" | "flagged";
+    let status: BroadcastStatus;
     
     if (confidencePercentage > 80) {
       status = "verified";
@@ -41,7 +42,7 @@ export async function processTranscriptSegment(
           source: 'YouTube Live',
           video_url: videoUrl,
           timestamp: new Date(item.start * 1000).toISOString(),
-          transcript_status: 'processed',
+          transcript_status: 'processed' as TranscriptStatus,
           confidence: confidencePercentage,
           status: status
         }

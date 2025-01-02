@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { analyzeClaimWithClaimBuster } from "@/utils/claimBusterApi";
 import { supabase } from "@/integrations/supabase/client";
+import { BroadcastStatus, TranscriptStatus } from "@/integrations/supabase/types";
 
 export const TextFactChecker = () => {
   const [inputText, setInputText] = useState("");
@@ -29,7 +30,7 @@ export const TextFactChecker = () => {
       const confidencePercentage = Math.round(score * 100);
       setConfidence(confidencePercentage);
       
-      let status: "verified" | "debunked" | "flagged";
+      let status: BroadcastStatus;
       if (confidencePercentage > 80) {
         status = "verified";
       } else if (confidencePercentage > 60) {
@@ -47,7 +48,7 @@ export const TextFactChecker = () => {
           confidence: confidencePercentage,
           status: status,
           source: "Manual Check",
-          transcript_status: "processed" // Set a definitive transcript status
+          transcript_status: "processed" as TranscriptStatus
         }]);
 
       if (error) throw error;
