@@ -26,16 +26,16 @@ export const TextFactChecker = () => {
     setIsChecking(true);
     try {
       const score = await analyzeClaimWithClaimBuster(inputText);
-      const confidencePercentage = score * 100;
+      const confidencePercentage = Math.round(score * 100); // Round to nearest integer
       setConfidence(confidencePercentage);
       
-      // Save to database
+      // Save to database with rounded confidence score
       const status = confidencePercentage > 80 ? "verified" : confidencePercentage > 60 ? "flagged" : "debunked";
       const { error } = await supabase
         .from("broadcasts")
         .insert([{
           content: inputText,
-          confidence: confidencePercentage,
+          confidence: confidencePercentage, // Using rounded integer value
           status,
           source: "Manual Check"
         }]);
@@ -44,7 +44,7 @@ export const TextFactChecker = () => {
       
       toast({
         title: "Fact Check Complete",
-        description: `Analyzed with ${Math.round(confidencePercentage)}% confidence`,
+        description: `Analyzed with ${confidencePercentage}% confidence`,
       });
     } catch (error) {
       console.error("Error checking fact:", error);
@@ -96,7 +96,7 @@ export const TextFactChecker = () => {
                     : "bg-red-500/10 text-red-500"
                 }
               >
-                {Math.round(confidence)}% confidence
+                {confidence}% confidence
               </Badge>
               <span className="text-sm text-muted-foreground">
                 {confidence > 80
