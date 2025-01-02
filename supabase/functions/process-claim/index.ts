@@ -42,7 +42,7 @@ serve(async (req) => {
     const confidence = Math.floor(Math.random() * 100);
     const status = confidence > 80 ? 'verified' : confidence > 60 ? 'flagged' : 'pending';
 
-    // Update the broadcast with status and confidence
+    // Update the broadcast with status and confidence - using transcript_status instead of api_processed
     const { error: updateError } = await supabaseClient
       .from('broadcasts')
       .update({
