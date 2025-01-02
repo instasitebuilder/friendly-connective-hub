@@ -17,14 +17,10 @@ async function fetchYouTubeTranscript(videoId: string): Promise<TranscriptSegmen
       throw new Error('Invalid video ID provided');
     }
 
-    const transcript = await YoutubeTranscript.fetchTranscript(videoId, {
-      lang: 'en',
-      country: 'US'
-    });
+    const transcript = await YoutubeTranscript.fetchTranscript(videoId);
+    console.log('Raw transcript response received');
 
-    console.log('Raw transcript response:', transcript ? 'Received data' : 'No data');
-
-    if (!transcript || transcript.length === 0) {
+    if (!transcript || !Array.isArray(transcript) || transcript.length === 0) {
       console.error('No transcript found for video:', videoId);
       throw new Error('No transcript found for this video');
     }
@@ -49,13 +45,11 @@ async function fetchYouTubeTranscript(videoId: string): Promise<TranscriptSegmen
       throw new Error('Invalid YouTube video ID provided');
     }
     
-    // Generic transcript not available error
-    throw new Error('Transcript is not available for this video');
+    throw new Error('Unable to fetch transcript for this video');
   }
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -93,7 +87,7 @@ serve(async (req) => {
     } catch (error) {
       console.error('Transcript fetch error:', error);
       return new Response(
-        JSON.stringify({ error: error.message || 'Transcript is not available for this video' }),
+        JSON.stringify({ error: error.message || 'Unable to fetch transcript for this video' }),
         {
           status: 404,
           headers: {

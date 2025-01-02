@@ -68,9 +68,8 @@ const YouTubePlayer = ({ videoUrl }: { videoUrl: string }) => {
         try {
           if (typeof error.message === 'string') {
             const errorBody = JSON.parse(error.message);
-            if (errorBody?.body) {
-              const bodyError = JSON.parse(errorBody.body);
-              errorMessage = bodyError.error || errorMessage;
+            if (errorBody?.error) {
+              errorMessage = errorBody.error;
             }
           }
         } catch (e) {
