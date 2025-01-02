@@ -60,11 +60,25 @@ const YouTubePlayer = ({ videoUrl }: { videoUrl: string }) => {
       });
       
       if (error) {
-        throw error;
+        console.error('Supabase function error:', error);
+        let errorMessage = "Failed to fetch transcript";
+        
+        // Parse the error body if it exists
+        try {
+          const errorBody = JSON.parse(error.message);
+          if (errorBody?.body) {
+            const bodyError = JSON.parse(errorBody.body);
+            errorMessage = bodyError.error || errorMessage;
+          }
+        } catch (e) {
+          console.error('Error parsing error message:', e);
+        }
+        
+        throw new Error(errorMessage);
       }
       
-      if (!data) {
-        throw new Error('No transcript data received');
+      if (!data || data.length === 0) {
+        throw new Error('No transcript data available for this video');
       }
 
       // Transform the transcript data to match our interface
@@ -94,12 +108,7 @@ const YouTubePlayer = ({ videoUrl }: { videoUrl: string }) => {
       console.error('Error fetching transcript:', error);
       setTranscript([]);
       
-      let errorMessage = "No transcript is available for this video";
-      if (error.message?.includes('Video is unavailable')) {
-        errorMessage = "The video is unavailable or does not exist";
-      } else if (error.message?.includes('Invalid YouTube URL')) {
-        errorMessage = "Please provide a valid YouTube URL";
-      }
+      let errorMessage = error.message || "No transcript is available for this video";
       
       toast({
         title: "Transcript Unavailable",
