@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import YouTube from "react-youtube";
 import { Card } from "./ui/card";
-import { ScrollArea } from "./ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { TranscriptDisplay } from "./youtube/TranscriptDisplay";
+import { processTranscriptSegment } from "./youtube/TranscriptProcessor";
 
 interface TranscriptItem {
   text: string;
@@ -79,45 +80,22 @@ const YouTubePlayer = ({ videoUrl }: { videoUrl: string }) => {
       // Process each transcript segment for fact-checking
       formattedTranscript.forEach(async (item) => {
         try {
-          const { data: broadcast } = await supabase
-            .from('broadcasts')
-            .insert([
-              {
-                content: item.text,
-                source: 'YouTube Live',
-                video_url: videoUrl,
-                timestamp: new Date(item.start * 1000).toISOString(),
-                transcript_status: 'processed'
-              }
-            ])
-            .select()
-            .single();
-
-          if (broadcast) {
-            // Trigger fact-checking process
-            await supabase.functions.invoke('process-claim', {
-              body: { broadcastId: broadcast.id }
-            });
-          }
+          await processTranscriptSegment(item, videoUrl);
         } catch (error) {
           console.error('Error processing transcript segment:', error);
         }
       });
     } catch (error: any) {
       console.error('Error fetching transcript:', error);
-      
-      // Clear the transcript when there's an error
       setTranscript([]);
       
       let errorMessage = "No transcript is available for this video";
-      
       if (error.message?.includes('Video is unavailable')) {
         errorMessage = "The video is unavailable or does not exist";
       } else if (error.message?.includes('Invalid YouTube URL')) {
         errorMessage = "Please provide a valid YouTube URL";
       }
       
-      // Show appropriate error message
       toast({
         title: "Transcript Unavailable",
         description: errorMessage,
@@ -177,38 +155,12 @@ const YouTubePlayer = ({ videoUrl }: { videoUrl: string }) => {
 
       <Card className="p-4">
         <h3 className="text-lg font-semibold mb-2">Live Transcript</h3>
-        {isLoadingTranscript ? (
-          <p className="text-sm text-muted-foreground">Loading transcript...</p>
-        ) : transcript.length > 0 ? (
-          <ScrollArea className="h-[300px]" ref={scrollRef}>
-            <div className="space-y-2">
-              {transcript.map((item, index) => (
-                <p
-                  key={index}
-                  id={`transcript-${item.start}`}
-                  className={`text-sm p-2 rounded transition-colors duration-200 ${
-                    currentTime >= item.start &&
-                    currentTime <= item.start + item.duration
-                      ? "bg-accent"
-                      : ""
-                  }`}
-                >
-                  {item.text}
-                </p>
-              ))}
-            </div>
-          </ScrollArea>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            No transcript available for this video. This could be because:
-            <ul className="list-disc pl-5 mt-2">
-              <li>Captions are disabled for this video</li>
-              <li>The video owner hasn't added captions</li>
-              <li>The video is in a language we don't support yet</li>
-              <li>The video might be unavailable or private</li>
-            </ul>
-          </p>
-        )}
+        <TranscriptDisplay
+          transcript={transcript}
+          currentTime={currentTime}
+          isLoadingTranscript={isLoadingTranscript}
+          scrollRef={scrollRef}
+        />
       </Card>
     </div>
   );
