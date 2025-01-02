@@ -36,12 +36,6 @@ export const BroadcastItem = ({ item }: { item: BroadcastWithFactChecks }) => {
           <Badge variant="outline" className="bg-purple-500/10 text-purple-500">
             {item.source}
           </Badge>
-          {item.api_processed && (
-            <Badge variant="outline" className="bg-indigo-500/10 text-indigo-500">
-              <Brain className="w-3 h-3 mr-1" />
-              AI Processed
-            </Badge>
-          )}
           <span className="text-xs text-muted-foreground">
             {new Date(item.timestamp || item.created_at || "").toLocaleTimeString()}
           </span>

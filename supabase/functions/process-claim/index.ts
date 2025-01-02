@@ -42,14 +42,13 @@ serve(async (req) => {
     // For testing purposes, generate a random confidence score
     // This helps us verify the function is working without external API dependencies
     const confidence = Math.floor(Math.random() * 100);
-    const status = confidence > 80 ? 'verified' : confidence < 40 ? 'debunked' : 'flagged';
+    const status = confidence > 80 ? 'verified' : confidence > 60 ? 'flagged' : 'pending';
 
     // Update the broadcast with a transaction
     const { error: updateError } = await supabaseClient
       .from('broadcasts')
       .update({
         confidence,
-        api_processed: true,
         status
       })
       .eq('id', broadcastId);
