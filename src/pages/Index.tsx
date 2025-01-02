@@ -1,6 +1,7 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import FactCheckingFeed from "@/components/FactCheckingFeed";
 import LiveStreamInput from "@/components/LiveStreamInput";
+import { TextFactChecker } from "@/components/fact-checking/TextFactChecker";
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,7 +39,9 @@ const Index = () => {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div className="col-span-2">
             <LiveStreamInput />
-            <div className="h-4" /> {/* Spacer */}
+            <div className="h-4" />
+            <TextFactChecker />
+            <div className="h-4" />
             <FactCheckingFeed />
           </div>
           <div className="space-y-4">
