@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { YoutubeTranscript } from "npm:youtube-transcript"
 import { corsHeaders } from "../_shared/cors.ts"
+import { YoutubeTranscript } from 'npm:youtube-transcript'
 
 interface TranscriptSegment {
   text: string;
@@ -8,7 +8,7 @@ interface TranscriptSegment {
   duration: number;
 }
 
-async function fetchYouTubeTranscript(videoId: string): Promise<TranscriptSegment[] | null> {
+async function fetchYouTubeTranscript(videoId: string): Promise<TranscriptSegment[]> {
   try {
     console.log('Attempting to fetch YouTube transcript for:', videoId);
     const transcript = await YoutubeTranscript.fetchTranscript(videoId, {
@@ -17,8 +17,7 @@ async function fetchYouTubeTranscript(videoId: string): Promise<TranscriptSegmen
     });
 
     if (!transcript || transcript.length === 0) {
-      console.log('No YouTube transcript found for:', videoId);
-      return null;
+      throw new Error('No transcript found');
     }
 
     // Transform the transcript format
@@ -29,36 +28,19 @@ async function fetchYouTubeTranscript(videoId: string): Promise<TranscriptSegmen
     }));
   } catch (error) {
     console.error('Error fetching YouTube transcript:', error);
-    return null;
-  }
-}
-
-async function fetchAudioTranscript(videoId: string): Promise<TranscriptSegment[] | null> {
-  try {
-    console.log('Attempting to fetch audio transcript for:', videoId);
-    // Note: This is a placeholder for the actual audio transcription implementation
-    // In a real implementation, you would:
-    // 1. Download the video's audio
-    // 2. Convert it to the required format
-    // 3. Send it to a speech-to-text service
-    // 4. Process and return the results
-    
-    // For now, we'll return null to indicate that audio transcription failed
-    return null;
-  } catch (error) {
-    console.error('Error fetching audio transcript:', error);
-    return null;
+    throw error;
   }
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { videoId } = await req.json()
-    console.log('Received request for video ID:', videoId)
+    const { videoId } = await req.json();
+    console.log('Received request for video ID:', videoId);
 
     if (!videoId) {
       return new Response(
@@ -70,24 +52,26 @@ serve(async (req) => {
             'Content-Type': 'application/json'
           }
         }
-      )
+      );
     }
 
-    // First, try to get YouTube transcript
-    let transcript = await fetchYouTubeTranscript(videoId);
-
-    // If YouTube transcript fails, try audio transcription
-    if (!transcript) {
-      console.log('YouTube transcript unavailable, attempting audio transcription');
-      transcript = await fetchAudioTranscript(videoId);
-    }
-
-    // If both methods fail, return an error
-    if (!transcript) {
+    try {
+      const transcript = await fetchYouTubeTranscript(videoId);
+      return new Response(
+        JSON.stringify(transcript),
+        {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    } catch (error) {
+      console.error('Transcript fetch error:', error);
       return new Response(
         JSON.stringify({ 
-          error: 'No transcript available for this video',
-          message: 'Both YouTube captions and audio transcription failed'
+          error: 'Transcript is not available for this video',
+          details: error.message 
         }),
         {
           status: 404,
@@ -96,20 +80,10 @@ serve(async (req) => {
             'Content-Type': 'application/json'
           }
         }
-      )
+      );
     }
-
-    return new Response(
-      JSON.stringify(transcript),
-      {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      }
-    )
   } catch (error) {
-    console.error('General error:', error)
+    console.error('General error:', error);
     return new Response(
       JSON.stringify({ 
         error: 'An error occurred while processing your request',
@@ -122,6 +96,6 @@ serve(async (req) => {
           'Content-Type': 'application/json'
         }
       }
-    )
+    );
   }
-})
+});
