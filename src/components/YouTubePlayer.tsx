@@ -61,14 +61,15 @@ const YouTubePlayer = ({ videoUrl }: { videoUrl: string }) => {
       
       if (error) {
         console.error('Supabase function error:', error);
-        
-        // Parse the error message from the response body
         let errorMessage = "Failed to fetch transcript";
+        
         try {
-          const errorBody = JSON.parse(error.message);
-          if (errorBody?.body) {
-            const bodyError = JSON.parse(errorBody.body);
-            errorMessage = bodyError.error || errorMessage;
+          if (typeof error.message === 'string') {
+            const errorBody = JSON.parse(error.message);
+            if (errorBody?.body) {
+              const bodyError = JSON.parse(errorBody.body);
+              errorMessage = bodyError.error || errorMessage;
+            }
           }
         } catch (e) {
           console.error('Error parsing error response:', e);

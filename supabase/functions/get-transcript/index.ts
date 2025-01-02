@@ -17,7 +17,8 @@ async function fetchYouTubeTranscript(videoId: string): Promise<TranscriptSegmen
     });
 
     if (!transcript || transcript.length === 0) {
-      throw new Error('No transcript found');
+      console.error('No transcript found for video:', videoId);
+      throw new Error('No transcript found for this video');
     }
 
     // Transform the transcript format
@@ -27,8 +28,17 @@ async function fetchYouTubeTranscript(videoId: string): Promise<TranscriptSegmen
       duration: segment.duration * 1000 // Convert to milliseconds
     }));
   } catch (error) {
-    console.error('Error fetching YouTube transcript:', error);
-    throw error;
+    console.error('Error in fetchYouTubeTranscript:', error);
+    // Check if the error is specifically about captions being disabled
+    if (error.message?.includes('Captions are disabled for this video')) {
+      throw new Error('Captions are disabled for this video');
+    }
+    // Check if it's a private video
+    if (error.message?.includes('private video')) {
+      throw new Error('This video is private or unavailable');
+    }
+    // Generic transcript not available error
+    throw new Error('Transcript is not available for this video');
   }
 }
 
@@ -70,8 +80,7 @@ serve(async (req) => {
       console.error('Transcript fetch error:', error);
       return new Response(
         JSON.stringify({ 
-          error: 'Transcript is not available for this video',
-          details: error.message 
+          error: error.message || 'Transcript is not available for this video'
         }),
         {
           status: 404,
