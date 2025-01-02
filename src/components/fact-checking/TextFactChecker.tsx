@@ -26,11 +26,10 @@ export const TextFactChecker = () => {
     setIsChecking(true);
     try {
       const score = await analyzeClaimWithClaimBuster(inputText);
-      const confidencePercentage = Math.round(score * 100); // Round to nearest integer
+      const confidencePercentage = Math.round(score * 100);
       setConfidence(confidencePercentage);
       
-      // Save to database with rounded confidence score and proper status values
-      let status: "verified" | "debunked" | "flagged" | "pending";
+      let status: "verified" | "debunked" | "flagged";
       if (confidencePercentage > 80) {
         status = "verified";
       } else if (confidencePercentage > 60) {
@@ -39,15 +38,16 @@ export const TextFactChecker = () => {
         status = "debunked";
       }
 
-      console.log('Inserting broadcast with status:', status); // Debug log
+      console.log('Inserting broadcast with status:', status);
 
       const { error } = await supabase
         .from("broadcasts")
         .insert([{
           content: inputText,
           confidence: confidencePercentage,
-          status,
-          source: "Manual Check"
+          status: status,
+          source: "Manual Check",
+          transcript_status: "processed" // Set a definitive transcript status
         }]);
 
       if (error) throw error;

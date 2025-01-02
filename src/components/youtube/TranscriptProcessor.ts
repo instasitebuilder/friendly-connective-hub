@@ -20,7 +20,7 @@ export async function processTranscriptSegment(
 
     // Convert score to percentage and determine status
     const confidencePercentage = Math.round(claimScore * 100);
-    let status: "verified" | "debunked" | "flagged" | "pending";
+    let status: "verified" | "debunked" | "flagged";
     
     if (confidencePercentage > 80) {
       status = "verified";
@@ -43,7 +43,7 @@ export async function processTranscriptSegment(
           timestamp: new Date(item.start * 1000).toISOString(),
           transcript_status: 'processed',
           confidence: confidencePercentage,
-          status: status // Explicitly set status based on confidence
+          status: status
         }
       ])
       .select()
