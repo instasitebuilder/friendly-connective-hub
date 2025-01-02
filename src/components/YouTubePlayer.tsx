@@ -77,6 +77,11 @@ const YouTubePlayer = ({ videoUrl }: { videoUrl: string }) => {
       console.log('Transcript data received:', formattedTranscript);
       setTranscript(formattedTranscript);
 
+      toast({
+        title: "Transcript Loaded",
+        description: "The transcript has been successfully loaded.",
+      });
+
       // Process each transcript segment for fact-checking
       formattedTranscript.forEach(async (item) => {
         try {
@@ -121,20 +126,6 @@ const YouTubePlayer = ({ videoUrl }: { videoUrl: string }) => {
       }, 1000);
     }
   };
-
-  // Auto-scroll to current transcript
-  useEffect(() => {
-    const currentTranscript = transcript.find(
-      item => currentTime >= item.start && currentTime <= item.start + item.duration
-    );
-    
-    if (currentTranscript && scrollRef.current) {
-      const element = document.getElementById(`transcript-${currentTranscript.start}`);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }
-  }, [currentTime, transcript]);
 
   return (
     <div className="space-y-4">
